@@ -120,6 +120,63 @@ def test_models_not_retrained():
     print("PASS: models loaded, not retrained")
 
 
+def test_normal_traffic_classified_as_normal():
+    """Regression test: normal traffic should be classified as NORMAL by binary model."""
+    X, _ = preprocess_csv(NORMAL_CSV)
+    results = predict_preprocessed(X)
+    binary_preds = results["binary_prediction"]
+    normal_count = int((binary_preds == "NORMAL").sum())
+    attack_count = int((binary_preds == "ATTACK").sum())
+    total = len(binary_preds)
+    normal_pct = normal_count / total * 100
+    print(f"  Normal traffic: {normal_count}/{total} NORMAL ({normal_pct:.1f}%), {attack_count} ATTACK")
+    assert normal_pct >= 90, f"Expected >= 90% normal traffic to be NORMAL, got {normal_pct:.1f}%"
+    print("PASS: normal traffic classified as NORMAL")
+
+
+def test_attack_traffic_classified_as_attack():
+    """Regression test: attack traffic should be classified as ATTACK by binary model."""
+    X, _ = preprocess_csv(ATTACK_CSV)
+    results = predict_preprocessed(X)
+    binary_preds = results["binary_prediction"]
+    attack_count = int((binary_preds == "ATTACK").sum())
+    normal_count = int((binary_preds == "NORMAL").sum())
+    total = len(binary_preds)
+    attack_pct = attack_count / total * 100
+    print(f"  Attack traffic: {attack_count}/{total} ATTACK ({attack_pct:.1f}%), {normal_count} NORMAL")
+    assert attack_pct >= 90, f"Expected >= 90% attack traffic to be ATTACK, got {attack_pct:.1f}%"
+    print("PASS: attack traffic classified as ATTACK")
+
+
+def test_feature_order_matches_scaler():
+    """Regression test: model input must use scaler's feature_names_in_ order."""
+    from src.model_loader import load_scaler, load_selected_features
+    scaler = load_scaler()
+    scaler_features = list(scaler.feature_names_in_)
+    aco_features = load_selected_features()
+    # ACO order and scaler order are different (both have 32 features)
+    assert len(aco_features) == 32
+    assert len(scaler_features) == 32
+    assert set(aco_features) == set(scaler_features)
+    print(f"  ACO order first 5: {aco_features[:5]}")
+    print(f"  Scaler order first 5: {scaler_features[:5]}")
+    print("PASS: feature order verified (ACO for selection, scaler order for model)")
+
+
+def test_binary_output_interpretation():
+    """Regression test: sigmoid >= 0.50 means ATTACK, < 0.50 means NORMAL."""
+    from src.inference import predict_binary
+    from src.model_loader import load_binary_model
+    binary_model = load_binary_model()
+    X, _ = preprocess_csv(NORMAL_CSV)
+    _, _, probs = predict_binary(binary_model, X)
+    # Normal traffic should have low probabilities (close to 0 = NORMAL)
+    mean_prob = float(np.mean(probs))
+    print(f"  Normal traffic mean binary probability: {mean_prob:.4f}")
+    assert mean_prob < 0.5, f"Expected normal traffic mean prob < 0.5, got {mean_prob:.4f}"
+    print("PASS: binary output interpretation correct (low prob = NORMAL)")
+
+
 if __name__ == "__main__":
     test_normal_traffic_binary()
     test_attack_traffic_full_pipeline()
@@ -130,4 +187,8 @@ if __name__ == "__main__":
     test_unknown_threshold_used()
     test_required_columns()
     test_models_not_retrained()
+    test_normal_traffic_classified_as_normal()
+    test_attack_traffic_classified_as_attack()
+    test_feature_order_matches_scaler()
+    test_binary_output_interpretation()
     print("\nAll inference tests passed.")

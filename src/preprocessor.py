@@ -77,13 +77,9 @@ def preprocess_dataframe(df):
     df_for_scaler = df_selected[scaler_features]
     scaled = scaler.transform(df_for_scaler)
 
-    # scaler.transform() returns columns in scaler.feature_names_in_ order.
-    # Reorder back to the saved ACO order expected by the model.
-    if scaler_features != selected_features:
-        scaled_df = pd.DataFrame(scaled, columns=scaler_features)
-        scaled = scaled_df[selected_features].values
-
-    # Final check: no NaN or infinite values after scaling
+    # Keep data in the scaler's feature_names_in_ order. This is the order
+    # the trained models expect. Do NOT reorder back to ACO order after
+    # scaling, as that would scramble the feature positions for the model.
     if np.isnan(scaled).any() or np.isinf(scaled).any():
         raise PreprocessingError(
             "NaN or infinite values remain after scaling."
