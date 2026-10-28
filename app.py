@@ -56,9 +56,11 @@ def run_analysis(df_or_path, source_label):
     total = len(results)
     normal_count = int((results["final_prediction"] == "Normal").sum())
     known_attack_count = int(
-        (results["final_prediction"] != "Normal")
-        & (results["final_prediction"] != "Unknown / Unseen Attack")
-    ).sum()
+        (
+            (results["final_prediction"] != "Normal")
+            & (results["final_prediction"] != "Unknown / Unseen Attack")
+        ).sum()
+    )
     unknown_count = int(
         (results["final_prediction"] == "Unknown / Unseen Attack").sum()
     )
