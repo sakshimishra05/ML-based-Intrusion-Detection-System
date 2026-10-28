@@ -73,6 +73,46 @@ threshold, the flow is reported as UNKNOWN / potential unseen attack. This is
 a heuristic for demonstration purposes and is not a scientifically proven
 zero-day detection method.
 
+## System Architecture
+
+```
+CSV traffic
+  → 32-feature validation (ACO-selected features)
+  → saved scaler transform() only (never refit)
+  → reshape (N, 32, 1)
+  → Binary CNN-LSTM: Normal / Attack
+      → if Normal: result = Normal
+      → if Attack: Multiclass CNN-LSTM
+          → known attack class + confidence
+          → if confidence < threshold: Unknown / Unseen Attack
+```
+
+The binary CNN-LSTM model (`models/CNN_LSTM_IoTID20.keras`) runs first and
+decides normal vs attack. Only traffic classified as attack is passed to the
+multiclass CNN-LSTM model
+(`multiclass_models/CNN_LSTM_IoTID20_multiclass_aco32.keras`) for known
+attack classification. Normal traffic is never sent to the multiclass model.
+
+The unknown/unseen result is a **confidence-based anomaly indicator**, not a
+mathematically proven zero-day detection. It means the multiclass model's
+highest softmax probability fell below the configured threshold.
+
+## Demo
+
+1. Start the application:
+
+   ```bash
+   streamlit run app.py
+   ```
+
+2. Upload a CSV containing the required 32 network-flow features, or select
+   one of the sample traffic buttons (Normal Traffic / Attack Traffic).
+3. Click **Analyze Traffic**.
+4. Review the detection summary (total records, normal, known attacks,
+   unknown/unseen attacks).
+5. Inspect per-row predictions in the results table.
+6. Download the prediction results as CSV.
+
 ## Limitations
 
 - No model training or retraining is performed.

@@ -128,8 +128,12 @@ def run_analysis(df_or_path, source_label):
 
 if analyze:
     if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
-        run_analysis(df, "uploaded CSV")
+        try:
+            df = pd.read_csv(uploaded_file)
+        except Exception as exc:
+            st.error(f"Failed to read CSV file: {exc}")
+        else:
+            run_analysis(df, "uploaded CSV")
     elif use_normal:
         run_analysis(NORMAL_SAMPLE, "Normal Traffic sample")
     elif use_attack:

@@ -59,6 +59,11 @@ def preprocess_dataframe(df):
         X: numpy array of shape (N, 32, 1) ready for model inference
         df_selected: DataFrame with the 32 features in ACO order (pre-scale)
     """
+    if df is None or len(df) == 0:
+        raise PreprocessingError(
+            "The uploaded CSV is empty. Please upload a file with data rows."
+        )
+
     selected_features = load_selected_features()
     validate_input_columns(df, selected_features)
 
