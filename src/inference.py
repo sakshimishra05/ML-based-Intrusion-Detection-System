@@ -148,6 +148,10 @@ def run_detection(df_or_csv):
         X: preprocessed input array (N, 32, 1)
         df_selected: DataFrame with selected features in ACO order
     """
-    X, df_selected = preprocess_dataframe(df_or_csv)
+    if isinstance(df_or_csv, str):
+        df = pd.read_csv(df_or_csv)
+    else:
+        df = df_or_csv
+    X, df_selected = preprocess_dataframe(df)
     results = predict_preprocessed(X)
     return results, X, df_selected

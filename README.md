@@ -13,10 +13,13 @@ intrusion-detection results. No model training is performed here.
 
 app.py
 config.py
-inference.py
-preprocessing.py
 requirements.txt
 README.md
+src/__init__.py
+src/model_loader.py
+src/preprocessor.py
+src/inference.py
+tests/
 models/
 multiclass_models/
 preprocessing_artifacts/
